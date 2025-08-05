@@ -52,6 +52,16 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				alpine: {
+					blue: 'hsl(var(--alpine-blue))',
+					ice: 'hsl(var(--ice-blue))',
+					snow: 'hsl(var(--snow-white))',
+					gray: 'hsl(var(--mountain-gray))',
+					navy: 'hsl(var(--deep-navy))',
+					teal: 'hsl(var(--glacier-teal))',
+					orange: 'hsl(var(--sunset-orange))',
+					green: 'hsl(var(--forest-green))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
