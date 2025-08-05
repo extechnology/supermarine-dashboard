@@ -1,11 +1,31 @@
+import { useState } from "react";
 import { DashboardCard } from "@/components/DashboardCard";
 import { RevenueChart } from "@/components/RevenueChart";
 import { BookingsChart } from "@/components/BookingsChart";
 import { RecentActivity } from "@/components/RecentActivity";
-import { Calendar, DollarSign, MessageCircle, Settings, Mountain, TrendingUp } from "lucide-react";
+import { TimeRecords } from "@/components/TimeRecords";
+import { LoginForm } from "@/components/LoginForm";
+import { Button } from "@/components/ui/button";
+import { Calendar, DollarSign, MessageCircle, Settings, Mountain, TrendingUp, LogOut } from "lucide-react";
 import heroImage from "@/assets/ski-resort-hero.jpg";
 
 const Index = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const handleLogin = (email: string, password: string) => {
+    // You'll replace this with your actual authentication logic
+    console.log("Login attempt:", { email, password });
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+  };
+
+  if (!isAuthenticated) {
+    return <LoginForm onLogin={handleLogin} />;
+  }
+
   return (
     <div className="min-h-screen bg-background dark">
       {/* Hero Section */}
@@ -16,13 +36,23 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-background/80 to-background/20" />
         <div className="relative z-10 h-full flex items-center">
           <div className="container mx-auto px-6">
-            <div className="max-w-2xl">
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-                Ski Resort Dashboard
-              </h1>
-              <p className="text-lg text-muted-foreground">
-                Monitor bookings, revenue, and guest services in real-time
-              </p>
+            <div className="flex justify-between items-center">
+              <div className="max-w-2xl">
+                <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+                  Ski Resort Dashboard
+                </h1>
+                <p className="text-lg text-muted-foreground">
+                  Monitor bookings, revenue, and guest services in real-time
+                </p>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={handleLogout}
+                className="bg-card/80 backdrop-blur-sm hover:bg-card"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>
@@ -66,6 +96,11 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <RevenueChart />
           <BookingsChart />
+        </div>
+
+        {/* Time Records Section */}
+        <div className="mb-8">
+          <TimeRecords />
         </div>
 
         {/* Bottom Section */}
