@@ -8,30 +8,25 @@ import { LoginForm } from "@/components/LoginForm";
 import { Button } from "@/components/ui/button";
 import { Calendar, DollarSign, MessageCircle, Settings, Mountain, TrendingUp, LogOut } from "lucide-react";
 import heroImage from "@/assets/ski-resort-hero.jpg";
+import { toast } from "sonner";
 
 const Index = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  const handleLogin = (email: string, password: string) => {
-    // You'll replace this with your actual authentication logic
-    console.log("Login attempt:", { email, password });
-    setIsAuthenticated(true);
-  };
+  const [isUserAuthenticated, setUserAuthenticated] = useState(false);
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    toast.success("You have been logged out.");
+    window.location.href = "/";
   };
 
-  if (!isAuthenticated) {
-    return <LoginForm onLogin={handleLogin} />;
-  }
 
   return (
     <div className="min-h-screen bg-background dark">
       {/* Hero Section */}
       <div 
-        className="relative h-64 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${heroImage})` }}
+        className="relative h-64 bg-cover bg-[url('/dashboard.jpg')] bg-center bg-no-repeat"
+        
       >
         <div className="absolute inset-0 bg-gradient-to-r from-background/80 to-background/20" />
         <div className="relative z-10 h-full flex items-center">
@@ -39,16 +34,16 @@ const Index = () => {
             <div className="flex justify-between items-center">
               <div className="max-w-2xl">
                 <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-                  Ski Resort Dashboard
+                  Super Marine Dashboard
                 </h1>
                 <p className="text-lg text-muted-foreground">
-                  Monitor bookings, revenue, and guest services in real-time
+                  Monitor bookings, revenue, and inquiries in real-time
                 </p>
               </div>
               <Button 
                 variant="outline" 
                 onClick={handleLogout}
-                className="bg-card/80 backdrop-blur-sm hover:bg-card"
+                className="bg-card/80 backdrop-blur-sm  text-white hover:bg-card"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
@@ -77,7 +72,7 @@ const Index = () => {
             icon={DollarSign}
           />
           <DashboardCard
-            title="Enquiries"
+            title="Inquiries"
             value="156"
             change="+24% from last week"
             changeType="positive"
