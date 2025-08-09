@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, Clock, User, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import DateFilter from "./ui/DateFilter";
 
 // Mock data - replace with your actual data source
 const mockRecords = [
@@ -60,6 +61,8 @@ const mockRecords = [
 export const TimeRecords = () => {
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [filteredRecords, setFilteredRecords] = useState(mockRecords);
+  const [filterDate, setFilterDate] = useState("all");
+
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
@@ -101,16 +104,10 @@ export const TimeRecords = () => {
           </div>
           <Popover>
             <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-[240px] justify-start text-left font-normal",
-                  !selectedDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {selectedDate ? format(selectedDate, "PPP") : <span>Filter by date</span>}
-              </Button>
+              <DateFilter
+                FilterDate={filterDate}
+                setFilterDate={setFilterDate}
+              />
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
@@ -148,15 +145,19 @@ export const TimeRecords = () => {
                     </div>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium">{record.activity}</span>
-                    <span className="text-xs text-muted-foreground">{record.duration}</span>
+                    <span className="text-sm font-medium">
+                      {record.activity}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {record.duration}
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-muted-foreground">
                     {format(record.date, "MMM dd, yyyy")}
                   </span>
-                  <Badge 
+                  <Badge
                     variant="outline"
                     className={getStatusColor(record.status)}
                   >
@@ -169,8 +170,8 @@ export const TimeRecords = () => {
         </div>
         {selectedDate && (
           <div className="mt-4 pt-4 border-t">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => handleDateSelect(undefined)}
               className="w-full"
             >
