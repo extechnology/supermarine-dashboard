@@ -49,7 +49,7 @@ export const LoginForm = () => {
       <Card className="relative z-10 w-full max-w-md mx-4 bg-card/95 backdrop-blur-sm border-border/50">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center mb-4">
-            <Mountain className="h-8 w-8 text-primary mr-2" />
+            <img src="/logo-icon.png" className="w-12 h-12 mr-2" alt="" />
             <span className="text-2xl font-bold text-foreground">
               Super Marine
             </span>
