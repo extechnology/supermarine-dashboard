@@ -1,50 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, User, MessageSquare, Wrench } from "lucide-react";
+import useEnquiry from "@/hooks/useEnquiry";
+import { formatDistanceToNow } from "date-fns";
 
-const activities = [
-  {
-    id: 1,
-    type: "booking",
-    user: "Sarah Johnson",
-    action: "Booked ski lesson package",
-    time: "2 minutes ago",
-    status: "confirmed"
-  },
-  {
-    id: 2,
-    type: "enquiry",
-    user: "Mike Chen",
-    action: "Enquired about group discounts",
-    time: "15 minutes ago",
-    status: "pending"
-  },
-  {
-    id: 3,
-    type: "service",
-    user: "Emma Wilson",
-    action: "Requested equipment maintenance",
-    time: "1 hour ago",
-    status: "in-progress"
-  },
-  {
-    id: 4,
-    type: "booking",
-    user: "David Brown",
-    action: "Cancelled accommodation booking",
-    time: "2 hours ago",
-    status: "cancelled"
-  },
-  {
-    id: 5,
-    type: "enquiry",
-    user: "Lisa Taylor",
-    action: "Asked about weather conditions",
-    time: "3 hours ago",
-    status: "resolved"
-  }
-];
-
+// Utility: map enquiry to activity type
 const getIcon = (type: string) => {
   switch (type) {
     case "booking":
@@ -58,6 +18,7 @@ const getIcon = (type: string) => {
   }
 };
 
+// Utility: badge color per status
 const getStatusColor = (status: string) => {
   switch (status) {
     case "confirmed":
@@ -76,6 +37,34 @@ const getStatusColor = (status: string) => {
 };
 
 export function RecentActivity() {
+  const { enquiry, loading, error } = useEnquiry();
+
+  if (loading) {
+    return (
+      <Card className="border-border/50 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="text-foreground">Service Requests</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground text-sm">Loading enquiries...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-foreground">Recent Activity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-destructive text-sm">Failed to load enquiries</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="border-border/50 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
       <CardHeader>
@@ -83,25 +72,27 @@ export function RecentActivity() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {activities.map((activity) => (
-            <div key={activity.id} className="flex items-center space-x-4 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-              <div className="text-primary">
-                {getIcon(activity.type)}
-              </div>
+          {enquiry.slice(0, 5).map((enquiry) => (
+            <div
+              key={enquiry.id}
+              className="flex items-center space-x-4 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+            >
+              <div className="text-primary">{getIcon("enquiry")}</div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
-                  {activity.user}
+                  {enquiry.name} ({enquiry.title})
                 </p>
                 <p className="text-sm text-muted-foreground truncate">
-                  {activity.action}
+                  Duration: {enquiry.duration} min • {enquiry.number_of_persons}{" "}
+                  person(s)
                 </p>
               </div>
               <div className="flex flex-col items-end space-y-1">
-                <Badge className={getStatusColor(activity.status)}>
-                  {activity.status}
-                </Badge>
+                <Badge className={getStatusColor("pending")}>pending</Badge>
                 <span className="text-xs text-muted-foreground">
-                  {activity.time}
+                  {formatDistanceToNow(new Date(enquiry.created_at), {
+                    addSuffix: true,
+                  })}
                 </span>
               </div>
             </div>

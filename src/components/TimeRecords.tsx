@@ -1,179 +1,228 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useMemo } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, Clock, User, MapPin } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import DateFilter from "./ui/DateFilter";
+import { Calendar as CalendarIcon, Clock, User, MapPin } from "lucide-react";
+import useBookings from "@/hooks/useBookings";
 
-// Mock data - replace with your actual data source
-const mockRecords = [
-  {
-    id: 1,
-    date: new Date("2024-01-15"),
-    guestName: "John Smith",
-    activity: "Ski Lesson",
-    location: "Beginner Slope",
-    duration: "2 hours",
-    status: "completed"
-  },
-  {
-    id: 2,
-    date: new Date("2024-01-14"),
-    guestName: "Sarah Johnson", 
-    activity: "Equipment Rental",
-    location: "Rental Shop",
-    duration: "1 day",
-    status: "active"
-  },
-  {
-    id: 3,
-    date: new Date("2024-01-13"),
-    guestName: "Mike Wilson",
-    activity: "Lift Pass",
-    location: "Main Lodge",
-    duration: "Full day",
-    status: "completed"
-  },
-  {
-    id: 4,
-    date: new Date("2024-01-12"),
-    guestName: "Emma Davis",
-    activity: "Snowboard Lesson",
-    location: "Advanced Slope", 
-    duration: "3 hours",
-    status: "cancelled"
-  },
-  {
-    id: 5,
-    date: new Date("2024-01-11"),
-    guestName: "Robert Brown",
-    activity: "Spa Service",
-    location: "Wellness Center",
-    duration: "90 minutes",
-    status: "completed"
+// Date formatting function
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
+};
+
+// Date filter button
+const DateFilter = () => (
+  <Button variant="outline" className="w-full sm:w-auto">
+    <CalendarIcon className="mr-2 h-4 w-4" />
+    Filter by Date
+  </Button>
+);
+
+// Status color helper
+const getStatusColor = (date: string) => {
+  const today = new Date();
+  const bookingDate = new Date(date);
+
+  if (bookingDate.toDateString() === today.toDateString()) {
+    return "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800"; // active
+  } else if (bookingDate < today) {
+    return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"; // completed
+  } else {
+    return "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700"; // upcoming
   }
-];
+};
 
 export const TimeRecords = () => {
-  const [selectedDate, setSelectedDate] = useState<Date>();
-  const [filteredRecords, setFilteredRecords] = useState(mockRecords);
-  const [filterDate, setFilterDate] = useState("all");
+  const { bookings, loading : isLoading, error :isError } = useBookings();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
 
+  const filteredRecords = useMemo(() => {
+    if (!bookings) return [];
+    if (!selectedDate) return bookings;
 
-  const handleDateSelect = (date: Date | undefined) => {
-    setSelectedDate(date);
-    if (date) {
-      const filtered = mockRecords.filter(record => 
-        record.date.toDateString() === date.toDateString()
-      );
-      setFilteredRecords(filtered);
-    } else {
-      setFilteredRecords(mockRecords);
-    }
-  };
+    return bookings.filter(
+      (record) =>
+        new Date(record.date).toDateString() === selectedDate.toDateString()
+    );
+  }, [bookings, selectedDate]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-alpine-green/20 text-alpine-green border-alpine-green/30";
-      case "active":
-        return "bg-alpine-blue/20 text-alpine-blue border-alpine-blue/30";
-      case "cancelled":
-        return "bg-destructive/20 text-destructive border-destructive/30";
-      default:
-        return "bg-muted text-muted-foreground";
-    }
-  };
+  if (isLoading) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Time Records</CardTitle>
+          <CardDescription>Loading bookings...</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Time Records</CardTitle>
+          <CardDescription>Error loading bookings.</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
+    <Card className="w-full max-w-none">
+      <CardHeader className="pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <Clock className="h-5 w-5 flex-shrink-0" />
               Time Records
             </CardTitle>
-            <CardDescription>
-              View all guest activities and bookings
+            <CardDescription className="text-sm">
+              View all guest bookings and activities
             </CardDescription>
           </div>
-          <Popover>
-            <PopoverTrigger asChild>
-              <DateFilter
-                FilterDate={filterDate}
-                setFilterDate={setFilterDate}
-              />
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={handleDateSelect}
-                initialFocus
-                className="pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
+          <div className="flex-shrink-0">
+            <Popover>
+              <PopoverTrigger asChild>
+                <DateFilter />
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
+      <CardContent className="px-4 sm:px-6">
+        <div className="space-y-3">
           {filteredRecords.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No records found for the selected date.
+            <div className="text-center py-12 px-4">
+              <div className="text-muted-foreground text-sm sm:text-base">
+                No records found for the selected date.
+              </div>
             </div>
           ) : (
             filteredRecords.map((record) => (
               <div
                 key={record.id}
-                className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                className="p-3 sm:p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
               >
-                <div className="flex items-center space-x-4">
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">{record.guestName}</span>
+                {/* Mobile Layout */}
+                <div className="block sm:hidden space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="font-medium truncate">
+                        {record.name}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="h-3 w-3" />
-                      {record.location}
-                    </div>
+                    <Badge
+                      variant="outline"
+                      className={`${getStatusColor(
+                        record.date
+                      )} text-xs flex-shrink-0 ml-2`}
+                    >
+                      {new Date(record.date) < new Date()
+                        ? "completed"
+                        : "upcoming"}
+                    </Badge>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">
-                      {record.activity}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {record.duration}
-                    </span>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="font-medium">{record.title}</span>
+                      <span className="text-muted-foreground">
+                        • {record.duration}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <MapPin className="h-3 w-3 flex-shrink-0" />
+                      <span className="truncate">{record.email}</span>
+                    </div>
+
+                    <div className="text-xs text-muted-foreground">
+                      {formatDate(new Date(record.date))} at {record.time}
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-muted-foreground">
-                    {format(record.date, "MMM dd, yyyy")}
-                  </span>
-                  <Badge
-                    variant="outline"
-                    className={getStatusColor(record.status)}
-                  >
-                    {record.status}
-                  </Badge>
+
+                {/* Desktop Layout */}
+                <div className="hidden sm:flex sm:items-center sm:justify-between">
+                  <div className="flex items-center space-x-6 min-w-0 flex-1">
+                    <div className="flex flex-col min-w-0">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="font-medium truncate">
+                          {record.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                        <MapPin className="h-3 w-3 flex-shrink-0" />
+                        <span className="truncate">{record.email}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-medium truncate">
+                        {record.title}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {record.duration}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3 flex-shrink-0">
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">
+                      {formatDate(new Date(record.date))} at {record.time}
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className={`${getStatusColor(
+                        record.date
+                      )} whitespace-nowrap`}
+                    >
+                      {new Date(record.date) < new Date()
+                        ? "completed"
+                        : "upcoming"}
+                    </Badge>
+                  </div>
                 </div>
               </div>
             ))
           )}
         </div>
+
         {selectedDate && (
-          <div className="mt-4 pt-4 border-t">
+          <div className="mt-6 pt-4 border-t">
             <Button
               variant="outline"
-              onClick={() => handleDateSelect(undefined)}
-              className="w-full"
+              onClick={() => setSelectedDate(undefined)}
+              className="w-full sm:w-auto"
+              size="sm"
             >
               Clear Date Filter
             </Button>

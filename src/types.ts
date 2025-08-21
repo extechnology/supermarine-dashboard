@@ -20,3 +20,25 @@ export interface Enquiry {
   number_of_persons: number;
   created_at: string;
 }
+
+export interface ServiceRequest {
+  name: string;
+  message: string;
+  created_at: string;
+}
+
+export interface Booking {
+  id: number;
+  title: string;
+  price: string;
+  duration: string;
+  time: string;
+  date: string; 
+  name: string;
+  email: string;
+  phone: string;
+  special_request: string;
+  discount: string;
+  number_of_persons: number;
+  created_at: string;
+}
