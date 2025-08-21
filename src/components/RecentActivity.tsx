@@ -1,49 +1,40 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, User, MessageSquare, Wrench } from "lucide-react";
-import useEnquiry from "@/hooks/useEnquiry";
+import { Clock, User, Mail, Phone, Wrench } from "lucide-react";
+import useEnquiry from "../hooks/useEnquiry";
 import { formatDistanceToNow } from "date-fns";
+import useServiceRequest from "@/hooks/useServiceRequest";
 
-// Utility: map enquiry to activity type
-const getIcon = (type: string) => {
-  switch (type) {
-    case "booking":
-      return <User className="h-4 w-4" />;
-    case "enquiry":
-      return <MessageSquare className="h-4 w-4" />;
-    case "service":
-      return <Wrench className="h-4 w-4" />;
-    default:
-      return <Clock className="h-4 w-4" />;
-  }
-};
+const getIcon = () => <Wrench className="h-5 w-5 text-primary" />;
 
-// Utility: badge color per status
+// Utility: badge color per status (for now, keeping pending as default)
 const getStatusColor = (status: string) => {
   switch (status) {
     case "confirmed":
-      return "bg-accent text-accent-foreground";
+      return "bg-green-100 text-green-800";
     case "pending":
-      return "bg-secondary text-secondary-foreground";
+      return "bg-yellow-100 text-yellow-800";
     case "in-progress":
-      return "bg-primary text-primary-foreground";
+      return "bg-blue-100 text-blue-800";
     case "cancelled":
-      return "bg-destructive text-destructive-foreground";
+      return "bg-red-100 text-red-800";
     case "resolved":
-      return "bg-muted text-muted-foreground";
+      return "bg-gray-100 text-gray-800";
     default:
-      return "bg-muted text-muted-foreground";
+      return "bg-gray-100 text-gray-800";
   }
 };
 
 export function RecentActivity() {
   const { enquiry, loading, error } = useEnquiry();
+  const { serviceRequest, loading: loadingServiceRequest, error: errorServiceRequest } = useServiceRequest();
+  console.log("service:", serviceRequest);
 
   if (loading) {
     return (
       <Card className="border-border/50 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="text-foreground">Service Requests</CardTitle>
+          <CardTitle className="text-foreground">Enquiry Bookings</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-sm">Loading enquiries...</p>
@@ -56,7 +47,7 @@ export function RecentActivity() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-foreground">Recent Activity</CardTitle>
+          <CardTitle className="text-foreground">Enquiry Bookings</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-destructive text-sm">Failed to load enquiries</p>
@@ -68,29 +59,49 @@ export function RecentActivity() {
   return (
     <Card className="border-border/50 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="text-foreground">Recent Activity</CardTitle>
+        <CardTitle className="text-foreground">Enquiry Bookings</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {enquiry.slice(0, 5).map((enquiry) => (
+          {enquiry.slice(0, 5).map((item) => (
             <div
-              key={enquiry.id}
-              className="flex items-center space-x-4 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+              key={item.id}
+              className="p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors shadow-sm"
             >
-              <div className="text-primary">{getIcon("enquiry")}</div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
-                  {enquiry.name} ({enquiry.title})
-                </p>
-                <p className="text-sm text-muted-foreground truncate">
-                  Duration: {enquiry.duration} min • {enquiry.number_of_persons}{" "}
-                  person(s)
-                </p>
+              <div className="flex items-center space-x-3 mb-2">
+                {getIcon()}
+                <h3 className="font-semibold text-foreground text-sm truncate">
+                  {item.title}
+                </h3>
+                {/* <Badge className={getStatusColor("pending")}>Pending</Badge> */}
               </div>
-              <div className="flex flex-col items-end space-y-1">
-                <Badge className={getStatusColor("pending")}>pending</Badge>
-                <span className="text-xs text-muted-foreground">
-                  {formatDistanceToNow(new Date(enquiry.created_at), {
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                <div className="flex items-center space-x-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span className="truncate">{item.name}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span className="truncate">{item.email}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span>{item.phone}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span>
+                    {item.date} at {item.time}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-2 text-xs text-muted-foreground flex justify-between">
+                <span>Duration: {item.duration} min</span>
+                <span>{item.number_of_persons} person(s)</span>
+                <span>
+                  {formatDistanceToNow(new Date(item.created_at), {
                     addSuffix: true,
                   })}
                 </span>

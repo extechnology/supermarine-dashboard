@@ -1,4 +1,4 @@
-import { useState, useMemo,useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -57,16 +57,79 @@ export const TimeRecords = () => {
   useEffect(() => {
     console.log("Filter changed:", filterDate);
   }, [filterDate]);
-  
+
   const filteredRecords = useMemo(() => {
     if (!bookings) return [];
-    if (!selectedDate) return bookings;
 
-    return bookings.filter(
-      (record) =>
-        new Date(record.date).toDateString() === selectedDate.toDateString()
-    );
-  }, [bookings, selectedDate]);
+    const today = new Date();
+
+    // If exact date from calendar is selected
+    if (selectedDate) {
+      return bookings.filter(
+        (record) =>
+          new Date(record.date).toDateString() === selectedDate.toDateString()
+      );
+    }
+
+    // If using filterDate
+    switch (filterDate) {
+      case "today":
+        return bookings.filter(
+          (record) =>
+            new Date(record.date).toDateString() === today.toDateString()
+        );
+
+      case "month":
+        return bookings.filter((record) => {
+          const d = new Date(record.date);
+          return (
+            d.getMonth() === today.getMonth() &&
+            d.getFullYear() === today.getFullYear()
+          );
+        });
+
+      case "year":
+        return bookings.filter(
+          (record) =>
+            new Date(record.date).getFullYear() === today.getFullYear()
+        );
+
+      case "all":
+        return bookings;
+
+      default:
+        // Handle specific year
+        if (/^\d{4}$/.test(filterDate)) {
+          return bookings.filter(
+            (record) =>
+              new Date(record.date).getFullYear() === parseInt(filterDate)
+          );
+        }
+
+        // Handle specific month (yyyy-MM)
+        if (/^\d{4}-\d{2}$/.test(filterDate)) {
+          const [year, month] = filterDate.split("-");
+          return bookings.filter((record) => {
+            const d = new Date(record.date);
+            return (
+              d.getFullYear() === parseInt(year) &&
+              d.getMonth() + 1 === parseInt(month)
+            );
+          });
+        }
+
+        // Handle custom date (yyyy-MM-dd)
+        if (/^\d{4}-\d{2}-\d{2}$/.test(filterDate)) {
+          return bookings.filter(
+            (record) =>
+              new Date(record.date).toDateString() ===
+              new Date(filterDate).toDateString()
+          );
+        }
+
+        return bookings;
+    }
+  }, [bookings, selectedDate, filterDate]);
 
   if (isLoading) {
     return (

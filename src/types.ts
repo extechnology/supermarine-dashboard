@@ -19,9 +19,11 @@ export interface Enquiry {
   phone: string;
   number_of_persons: number;
   created_at: string;
+  date: string;
 }
 
 export interface ServiceRequest {
+  id: number;
   name: string;
   message: string;
   created_at: string;

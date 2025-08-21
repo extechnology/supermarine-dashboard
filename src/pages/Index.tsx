@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import useBookings from "../hooks/useBookings";
 import useEnquiry from "../hooks/useEnquiry";
 import useServiceRequest from "../hooks/useServiceRequest";
+import ServiceRequest from "@/components/ServiceRequest";
 
 function calculatePercentageChange(current: number, previous: number): string {
   if (previous === 0) return current > 0 ? "+100%" : "0%";
@@ -211,30 +212,13 @@ const Index = () => {
         </div>
 
         {/* Bottom Section */}
-        <div className="">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="">
             <RecentActivity />
           </div>
-
-          {/* Quick Stats */}
-          {/* <div className="space-y-6">
-            <DashboardCard
-              title="Peak Season Bookings"
-              value="89%"
-              change="Capacity utilization"
-              changeType="positive"
-              icon={Mountain}
-              className="bg-gradient-to-br from-primary/10 to-accent/10"
-            />
-            <DashboardCard
-              title="Guest Satisfaction"
-              value="4.8/5"
-              change="Based on 342 reviews"
-              changeType="positive"
-              icon={TrendingUp}
-              className="bg-gradient-to-br from-accent/10 to-primary/10"
-            />
-          </div> */}
+          <div>
+            <ServiceRequest />
+          </div>
         </div>
       </div>
     </div>
