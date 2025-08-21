@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo,useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarIcon, Clock, User, MapPin } from "lucide-react";
 import useBookings from "@/hooks/useBookings";
+import DateFilter from "./ui/DateFilter";
 
 // Date formatting function
 const formatDate = (date: Date) => {
@@ -27,12 +28,12 @@ const formatDate = (date: Date) => {
 };
 
 // Date filter button
-const DateFilter = () => (
-  <Button variant="outline" className="w-full sm:w-auto">
-    <CalendarIcon className="mr-2 h-4 w-4" />
-    Filter by Date
-  </Button>
-);
+// const DateFilter = () => (
+//   <Button variant="outline" className="w-full sm:w-auto">
+//     <CalendarIcon className="mr-2 h-4 w-4" />
+//     Filter by Date
+//   </Button>
+// );
 
 // Status color helper
 const getStatusColor = (date: string) => {
@@ -49,9 +50,14 @@ const getStatusColor = (date: string) => {
 };
 
 export const TimeRecords = () => {
-  const { bookings, loading : isLoading, error :isError } = useBookings();
+  const { bookings, loading: isLoading, error: isError } = useBookings();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [filterDate, setFilterDate] = useState<string>("today");
 
+  useEffect(() => {
+    console.log("Filter changed:", filterDate);
+  }, [filterDate]);
+  
   const filteredRecords = useMemo(() => {
     if (!bookings) return [];
     if (!selectedDate) return bookings;
@@ -100,7 +106,10 @@ export const TimeRecords = () => {
           <div className="flex-shrink-0">
             <Popover>
               <PopoverTrigger asChild>
-                <DateFilter />
+                <DateFilter
+                  FilterDate={filterDate}
+                  setFilterDate={setFilterDate}
+                />
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="end">
                 <Calendar
