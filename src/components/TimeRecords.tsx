@@ -13,10 +13,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
-import { Calendar as CalendarIcon, Clock, User, MapPin } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, User, MapPin, Download } from "lucide-react";
 import useBookings from "@/hooks/useBookings";
 import DateFilter from "./ui/DateFilter";
+import axiosInstance from "../api/axiosinstace";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+
 
 // Date formatting function
 const formatDate = (date: Date) => {
@@ -35,24 +43,45 @@ const formatDate = (date: Date) => {
 //   </Button>
 // );
 
-// Status color helper
-const getStatusColor = (date: string) => {
-  const today = new Date();
-  const bookingDate = new Date(date);
-
-  if (bookingDate.toDateString() === today.toDateString()) {
-    return "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800"; // active
-  } else if (bookingDate < today) {
-    return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"; // completed
-  } else {
-    return "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700"; // upcoming
-  }
-};
 
 export const TimeRecords = () => {
   const { bookings, loading: isLoading, error: isError } = useBookings();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [filterDate, setFilterDate] = useState<string>("today");
+  console.log("Bookings:", bookings);
+
+  const handleExport = async () => {
+    try {
+      const response = await axiosInstance.get("/export/bookings/", {
+        params: { filter: filterDate }, // pass filter if needed
+        responseType: "blob", // important for file downloads
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "Bookings.xlsx");
+      document.body.appendChild(link);
+      link.click();
+    } catch (error) {
+      console.error("Export failed:", error);
+    }
+  };
+
+
+  const handleStatusChange = async (id: number, newStatus: string) => {
+    try {
+      await axiosInstance.patch(`/bookings/${id}/status/`, {
+        status: newStatus,
+      });
+      // Option A: Refresh the list manually
+      window.location.reload();
+      // Option B: Better -> Optimistically update state inside useBookings
+    } catch (error) {
+      console.error("Failed to update status:", error);
+    }
+  };
+
 
   useEffect(() => {
     console.log("Filter changed:", filterDate);
@@ -160,13 +189,19 @@ export const TimeRecords = () => {
           <div className="space-y-1">
             <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <Clock className="h-5 w-5 flex-shrink-0" />
-              Time Records
+              Booking Time Records
             </CardTitle>
             <CardDescription className="text-sm">
               View all guest bookings and activities
             </CardDescription>
           </div>
-          <div className="flex-shrink-0">
+          <div className="flex gap-4">
+            <div>
+              <Button className="content-center" onClick={handleExport}>
+                <Download className="mr-2 h-4 w-4" />
+                <span>Download Excel</span>
+              </Button>
+            </div>
             <Popover>
               <PopoverTrigger asChild>
                 <DateFilter
@@ -210,16 +245,31 @@ export const TimeRecords = () => {
                         {record.name}
                       </span>
                     </div>
-                    <Badge
-                      variant="outline"
-                      className={`${getStatusColor(
-                        record.date
-                      )} text-xs flex-shrink-0 ml-2`}
-                    >
-                      {new Date(record.date) < new Date()
-                        ? "completed"
-                        : "upcoming"}
-                    </Badge>
+                    <div className="flex items-center space-x-3 flex-shrink-0">
+                      <span className="text-sm text-muted-foreground whitespace-nowrap">
+                        {formatDate(new Date(record.date))} at {record.time}
+                      </span>
+                      <Select
+                        value={record.status}
+                        onValueChange={(value) =>
+                          handleStatusChange(record.id, value)
+                        }
+                      >
+                        <SelectTrigger
+                          className={`w-[120px] ${
+                            record.status === "reviewed"
+                              ? " text-green-700 border-green-300"
+                              : " text-red-700 border-red-300"
+                          }`}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="reviewed">Reviewed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -271,16 +321,31 @@ export const TimeRecords = () => {
                     <span className="text-sm text-muted-foreground whitespace-nowrap">
                       {formatDate(new Date(record.date))} at {record.time}
                     </span>
-                    <Badge
-                      variant="outline"
-                      className={`${getStatusColor(
-                        record.date
-                      )} whitespace-nowrap`}
-                    >
-                      {new Date(record.date) < new Date()
-                        ? "completed"
-                        : "upcoming"}
-                    </Badge>
+                    <div className="flex items-center space-x-3 flex-shrink-0">
+                      <span className="text-sm text-muted-foreground whitespace-nowrap">
+                        {formatDate(new Date(record.date))} at {record.time}
+                      </span>
+                      <Select
+                        value={record.status}
+                        onValueChange={(value) =>
+                          handleStatusChange(record.id, value)
+                        }
+                      >
+                        <SelectTrigger
+                          className={`w-[120px] ${
+                            record.status === "reviewed"
+                              ? " text-green-700 border-green-300"
+                              : " text-red-700 border-red-300"
+                          }`}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="reviewed">Reviewed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
               </div>

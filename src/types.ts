@@ -20,6 +20,7 @@ export interface Enquiry {
   number_of_persons: number;
   created_at: string;
   date: string;
+  status: string;
 }
 
 export interface ServiceRequest {
@@ -27,6 +28,13 @@ export interface ServiceRequest {
   name: string;
   message: string;
   created_at: string;
+  status: string;
+  totalCount: number;
+  currentPage: number;
+  itemsPerPage: number;
+  loading: boolean;
+  error:boolean;
+
 }
 
 export interface Booking {
@@ -43,4 +51,5 @@ export interface Booking {
   discount: string;
   number_of_persons: number;
   created_at: string;
+  status: string;
 }

@@ -1,34 +1,56 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Clock, User, Mail, Phone, Wrench } from "lucide-react";
+import { Clock, User, Mail, Phone, Wrench, Download } from "lucide-react";
 import useEnquiry from "../hooks/useEnquiry";
 import { formatDistanceToNow } from "date-fns";
 import useServiceRequest from "@/hooks/useServiceRequest";
+import axiosInstance from "../api/axiosinstace";
+import { Button } from "./ui/button";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 const getIcon = () => <Wrench className="h-5 w-5 text-primary" />;
 
-// Utility: badge color per status (for now, keeping pending as default)
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "confirmed":
-      return "bg-green-100 text-green-800";
-    case "pending":
-      return "bg-yellow-100 text-yellow-800";
-    case "in-progress":
-      return "bg-blue-100 text-blue-800";
-    case "cancelled":
-      return "bg-red-100 text-red-800";
-    case "resolved":
-      return "bg-gray-100 text-gray-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-};
 
 export function RecentActivity() {
   const { enquiry, loading, error } = useEnquiry();
-  const { serviceRequest, loading: loadingServiceRequest, error: errorServiceRequest } = useServiceRequest();
-  console.log("service:", serviceRequest);
+  const {
+    serviceRequest,
+    loading: loadingServiceRequest,
+    error: errorServiceRequest,
+  } = useServiceRequest();
+
+  const handleExport = async () => {
+    try {
+      const response = await axiosInstance.get("/export/enquiry-bookings/", {
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "ServiceRequests.xlsx");
+      document.body.appendChild(link);
+      link.click();
+    } catch (error) {
+      console.error("Export failed:", error);
+    }
+  };
+
+  const handleStatusChange = async (id: number, newStatus: string) => {
+    try {
+      await axiosInstance.patch(`/enquiry/${id}/status/`, {
+        status: newStatus,
+      });
+      window.location.reload();
+    } catch (error) {
+      console.error("Failed to update status:", error);
+    }
+  };
 
   if (loading) {
     return (
@@ -59,7 +81,13 @@ export function RecentActivity() {
   return (
     <Card className="border-border/50 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="text-foreground">Enquiry Bookings</CardTitle>
+        <div className="flex items-center justify-between w-full">
+          <CardTitle className="text-foreground">Enquiry Bookings</CardTitle>
+          <Button className="content-center" onClick={handleExport}>
+            <Download className="mr-2 h-4 w-4" />
+            <span>Download Excel</span>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -76,24 +104,65 @@ export function RecentActivity() {
                 {/* <Badge className={getStatusColor("pending")}>Pending</Badge> */}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                <div className="flex items-center space-x-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="truncate">{item.name}</span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm items-center">
+                {/* Column 1 */}
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span className="truncate">{item.name}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span className="truncate">{item.email}</span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="truncate">{item.email}</span>
+
+                {/* Column 2 */}
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span>{item.phone}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      {item.date} at {item.time}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>{item.phone}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span>
-                    {item.date} at {item.time}
-                  </span>
+
+                {/* Column 3 (Status) */}
+                <div className="flex items-end justify-end space-x-2">
+                  <Select
+                    value={item.status}
+                    onValueChange={(value) =>
+                      handleStatusChange(item.id, value)
+                    }
+                  >
+                    <SelectTrigger
+                      className={`w-[120px] capitalize ${
+                        item.status === "reviewed"
+                          ? "text-green-700 border-green-300"
+                          : "text-red-700 border-red-300"
+                      }`}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem
+                        value="pending"
+                        className="text-red-600 focus:bg-red-300 focus:text-red-600"
+                      >
+                        Pending
+                      </SelectItem>
+                      <SelectItem
+                        value="reviewed"
+                        className="text-green-600 focus:bg-green-300 focus:text-green-600"
+                      >
+                        Reviewed
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
