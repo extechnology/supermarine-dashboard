@@ -169,7 +169,7 @@ const Index = () => {
           {/* ✅ Revenue */}
           <DashboardCard
             title="Revenue"
-            value={isLoading ? "Loading..." : `$${currentRevenue.toFixed(2)}`}
+            value={isLoading ? "Loading..." : `AED ${currentRevenue.toFixed(2)}`}
             change={`${revenueChange} from last month`}
             changeType={currentRevenue >= prevRevenue ? "positive" : "negative"}
             icon={DollarSign}

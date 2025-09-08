@@ -97,7 +97,7 @@ export function RevenueChart() {
             <YAxis
               stroke="hsl(var(--muted-foreground))"
               fontSize={12}
-              tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+              tickFormatter={(value) => `AED ${(value / 1000).toFixed(0)}k`}
             />
             <Tooltip
               contentStyle={{
@@ -108,7 +108,7 @@ export function RevenueChart() {
               }}
               formatter={(value, name) =>
                 name === "revenue"
-                  ? [`$${Number(value).toLocaleString()}`, "Revenue"]
+                  ? [`AED ${Number(value).toLocaleString()}`, "Revenue"]
                   : [value, "Bookings"]
               }
             />
